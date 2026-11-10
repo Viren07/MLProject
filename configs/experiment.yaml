@@ -1,0 +1,22 @@
+# Single source of truth for the experiment. Tier 1 = the minimum viable study.
+# Change values here, not inside code, so both of us run identical settings.
+seed: 0
+
+task:
+  name: scene_recognition
+  dataset: indoor67          # placeholder until dataset choice is locked
+  n_options: 5               # true room + 4 distractors, letters A to E
+  n_calibration: 500
+  n_test: 500
+
+conformal:
+  alpha: 0.10                # 90% coverage target
+  score: lac                 # least ambiguous classifier: 1 - p(true option)
+
+corruptions:                 # Tier 1: one corruption, two severities
+  - name: defocus_blur
+    severities: [2, 5]
+
+models:                      # Tier 1: one model. Tier 2 adds the open model.
+  - name: gpt-4o
+    provider: openai

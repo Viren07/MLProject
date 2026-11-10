@@ -1,0 +1,6 @@
+# Only needed for the open-source VLM (Qwen2-VL / LLaVA), usually on Colab or a GPU box.
+# Install torch separately for your CUDA version first: https://pytorch.org/get-started/locally/
+-r requirements.txt
+transformers>=4.45
+accelerate>=0.34
+qwen-vl-utils>=0.0.8

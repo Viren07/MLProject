@@ -1,0 +1,19 @@
+# Core: corruption pipeline + conformal prediction + analysis
+numpy>=1.26
+scipy>=1.11
+pandas>=2.1
+pillow>=10.0
+matplotlib>=3.8
+tqdm>=4.66
+pyyaml>=6.0
+python-dotenv>=1.0
+
+# Image corruptions (ImageNet-C functions that work on arbitrary images)
+imagecorruptions>=1.1.2
+
+# API models (GPT-4o exposes token logprobs, which conformal scoring needs)
+openai>=1.40
+
+# Dev
+pytest>=8.0
+ipykernel>=6.29
