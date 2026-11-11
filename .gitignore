@@ -24,3 +24,6 @@ Thumbs.db
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
+
+# exploration manifests (only the final splits/indoor67_seed*.json is committed)
+splits/explore_*

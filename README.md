@@ -73,8 +73,7 @@ The model sees one image and picks the true room from options A to E.
   after results exist (random streams can differ across numpy versions).
 - The official Train/Test lists are not used: calibration and test must be exchangeable draws
   from one pool.
-- Distractors default to `mixed` (2 similar rooms + 2 random) to avoid a ceiling effect. The
-  pilot set is used to check this choice before touching calibration or test data.
+- Distractors are `confusable` (up to 4 rooms from the same family, filled from outside if the family is small). On the 100-image pilot GPT-4o scored 97% (mixed) vs 96% (confusable), so difficulty barely moved; confusable was kept for more informative errors.
 - Tests: `python -m pytest`
 
 ## Working agreement

@@ -42,6 +42,7 @@ def main() -> int:
     ap.add_argument("--config", default="configs/experiment.yaml")
     ap.add_argument("--data-dir", default="data/indoor67")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--distractor-mode", default=None, help="override config (for exploration)")
     ap.add_argument("--force", action="store_true", help="overwrite an existing manifest")
     args = ap.parse_args()
 
@@ -60,7 +61,7 @@ def main() -> int:
     print(f"Dropped {len(bad)} unreadable image(s): {bad[:5]}{' ...' if len(bad) > 5 else ''}")
 
     m = build_items(pool, seed=cfg["seed"], n_pilot=t["n_pilot"], n_calibration=t["n_calibration"],
-                    n_test=t["n_test"], n_options=t["n_options"], distractor_mode=t["distractor_mode"])
+                    n_test=t["n_test"], n_options=t["n_options"], distractor_mode=args.distractor_mode or t["distractor_mode"])
     m["meta"]["dropped_unreadable"] = sorted(bad)
     save_manifest(m, out)
 

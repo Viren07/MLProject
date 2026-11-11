@@ -1,6 +1,7 @@
 # Single source of truth for the experiment. Tier 1 = the minimum viable study.
 # Change values here, not inside code, so both of us run identical settings.
 seed: 0
+cache_dir: results/raw/cache   # gitignored
 
 task:
   name: scene_recognition
@@ -8,7 +9,7 @@ task:
   data_dir: data/indoor67    # gitignored; see README Data section
   manifest: splits/indoor67_seed0.json   # committed; source of truth for items
   n_options: 5               # true room + 4 distractors, letters A to E
-  distractor_mode: mixed     # random | mixed (2 confusable + 2 random) | confusable
+  distractor_mode: confusable  # random | mixed | confusable; chosen on the pilot (GPT-4o ~96% either way)
   n_pilot: 100               # disjoint set used only to sanity check difficulty
   n_calibration: 500
   n_test: 500
@@ -24,3 +25,5 @@ corruptions:                 # Tier 1: one corruption, two severities
 models:                      # Tier 1: one model. Tier 2 adds the open model.
   - name: gpt-4o
     provider: openai
+    image_detail: high       # fixed; blur effects would be hidden by 'low' downsampling
+    jpeg_quality: 95         # same encoder for clean and corrupted images
