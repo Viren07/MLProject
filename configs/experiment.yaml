@@ -18,9 +18,12 @@ conformal:
   alpha: 0.10                # 90% coverage target
   score: lac                 # least ambiguous classifier: 1 - p(true option)
 
-corruptions:                 # Tier 1: one corruption, two severities
-  - name: defocus_blur
+corruptions:                 # Tier 1, chosen on the pilot (clean 96%: noise 5 -> 87%, blur 5 -> 92%)
+  - name: gaussian_noise     # primary: strongest stressor on the pilot
+    severities: [3, 5]
+  - name: defocus_blur       # gentle comparison
     severities: [2, 5]
+# Dropped after the pilot: contrast (barely moves GPT-4o), fog (imagecorruptions breaks on NumPy 2).
 
 models:                      # Tier 1: one model. Tier 2 adds the open model.
   - name: gpt-4o
