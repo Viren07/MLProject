@@ -56,6 +56,27 @@ In VS Code: install the recommended extensions when prompted, then
 Open-source VLM (GPU or Colab only): `pip install -r requirements-open-models.txt`
 after installing the right `torch` build for your machine.
 
+## Data
+Task: 5-option room recognition on MIT Indoor67 (Quattoni and Torralba, CVPR 2009).
+The model sees one image and picks the true room from options A to E.
+
+- License: the dataset page says only "The images provided here are for research purposes only."
+  There is no formal license. **Never commit or redistribute the images or any corrupted copies.**
+  `data/` is gitignored. Only the manifest in `splits/` is committed.
+- Get the data (about 2.6 GB). The MIT link is unreliable, so use the Hugging Face mirror
+  (Voxel51/IndoorSceneRecognition, same 15,620 images and 67 classes):
+  `hf download Voxel51/IndoorSceneRecognition --repo-type dataset --local-dir data/indoor67_raw`
+  then `python scripts/prepare_indoor67.py` to build `data/indoor67/Images/<class>/*.jpg`.
+- Build the splits once, then commit the file: `python scripts/build_splits.py`
+  Creates `splits/indoor67_seed0.json` (100 pilot, 500 calibration, 500 test, all disjoint).
+- The manifest is the source of truth for which images and options are used. Do not regenerate it
+  after results exist (random streams can differ across numpy versions).
+- The official Train/Test lists are not used: calibration and test must be exchangeable draws
+  from one pool.
+- Distractors default to `mixed` (2 similar rooms + 2 random) to avoid a ceiling effect. The
+  pilot set is used to check this choice before touching calibration or test data.
+- Tests: `python -m pytest`
+
 ## Working agreement
 - Work on a branch, open a pull request, the other person reviews. Do not push to `main` directly.
 - Settings live in `configs/experiment.yaml`. Do not hardcode them in code.

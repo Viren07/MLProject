@@ -4,8 +4,12 @@ seed: 0
 
 task:
   name: scene_recognition
-  dataset: indoor67          # placeholder until dataset choice is locked
+  dataset: indoor67          # MIT Indoor Scenes, 67 classes, research-use only
+  data_dir: data/indoor67    # gitignored; see README Data section
+  manifest: splits/indoor67_seed0.json   # committed; source of truth for items
   n_options: 5               # true room + 4 distractors, letters A to E
+  distractor_mode: mixed     # random | mixed (2 confusable + 2 random) | confusable
+  n_pilot: 100               # disjoint set used only to sanity check difficulty
   n_calibration: 500
   n_test: 500
 
