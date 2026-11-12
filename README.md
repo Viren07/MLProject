@@ -2,7 +2,8 @@
 
 Empirical study of whether the coverage guarantee of conformal prediction holds for
 vision-language models making robot-style multiple-choice decisions when the input
-image is corrupted (blur, low light, noise), and whether this differs across VLMs.
+image is corrupted (noise, pixelation, blur, color loss, content mixing, fisheye), and
+whether this differs across VLMs.
 
 Authors: Viren Agarwal, Vibhav Podar
 
@@ -14,13 +15,46 @@ and (2) prediction-set size (does the model hedge, or stay confidently wrong).
 ## Layout
 ```
 configs/     experiment.yaml, the single source of truth for settings
-src/         library code (corruptions, model wrappers, conformal, metrics)
-scripts/     runnable entry points (check_env.py, later run_experiment.py)
-notebooks/   exploration and figures
-tests/       unit tests, especially for the conformal code
-data/        datasets (gitignored, re-download with the instructions below)
-results/     raw/ (gitignored) and figures/
+src/         dataset (task + manifest), corruptions, partners, scoring (GPT-4o), conformal, grid
+scripts/     entry points (see Pipeline)
+splits/      the committed manifest: which images and options are used (source of truth)
+tests/       unit tests
+results/     pilot_*.md (screening records), probs/ (model probabilities), summary_*.csv
+docs/        dropped_corruptions.py (reference only, not used by the pipeline)
+data/        datasets (gitignored; never commit images or corrupted copies)
 ```
+
+## Corruptions
+One standard scale: severity is a percent of each family's maximum usable strength (25, 50, 75, 100),
+written `family:severity`, e.g. `pixelate:75`. 100 is the harshest level that still looks like a room.
+Percentages compare within a family, not across families. Details are in `src/corruptions.py`.
+
+| family | what 25 / 50 / 75 / 100 mean |
+|---|---|
+| gaussian_noise | sigma 0.20 / 0.40 / 0.60 / 0.80 |
+| pixelate | resolution kept 50% / 25% / 12.5% / 6.25% |
+| defocus_blur | disk radius 3.5 / 7 / 10.5 / 14 px |
+| blur_gray | the same blur, then grayscale |
+| cutmix | 7.5% / 15% / 22.5% / 30% of the frame from another room (label stays the base room) |
+| mixup | weight 0.10 / 0.20 / 0.30 / 0.40 of another room (label stays the base room) |
+| fisheye | barrel distortion k = 0.5 / 1 / 2 / 4 |
+| grayscale | 100 only (control) |
+
+The frozen Tier 1 grid (12 conditions) is in `configs/experiment.yaml`. Corrupted images are
+regenerated deterministically on demand and are never stored.
+
+## Pipeline
+```bash
+python scripts/check_env.py                    # environment check
+python scripts/prepare_indoor67.py             # after downloading the data (see Data)
+python scripts/build_splits.py                 # once; commit splits/indoor67_seed0.json
+python scripts/run_pilot.py                    # clean pilot on the 100 pilot images
+python scripts/pilot_screen.py                 # corruption screening on the pilot images only
+python scripts/run_grid.py                     # Week 1 gate: calibration + test, clean only
+python scripts/analyze.py                      # calibrate, report coverage, PASS/FAIL gate
+python scripts/run_grid.py --all               # every corruption condition on the test split
+```
+Every model call is cached on disk (`results/raw/cache`, gitignored), so reruns cost nothing.
 
 ## Setup (Windows, VS Code)
 Requires Python 3.10+.
@@ -83,4 +117,4 @@ The model sees one image and picks the true room from options A to E.
 - Fixed seed everywhere so results are reproducible.
 
 ## Status
-Week 1 of 3. Tier 1 (one task, one corruption at two severities, one model) first.
+Week 1 of 3. Tier 1: one task, the frozen 12-condition grid, GPT-4o. Next: the clean-coverage gate, then the full grid, then more models.

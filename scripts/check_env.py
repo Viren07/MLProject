@@ -2,9 +2,10 @@
 import importlib
 import os
 import sys
+from pathlib import Path
 
 REQUIRED = ["numpy", "scipy", "pandas", "PIL", "matplotlib", "tqdm", "yaml",
-            "dotenv", "imagecorruptions", "openai"]
+            "dotenv", "cv2", "openai"]
 
 
 def main() -> int:
@@ -33,11 +34,13 @@ def main() -> int:
           else "WARN  OPENAI_API_KEY not set (copy .env.example to .env)")
 
     try:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
         import numpy as np
-        from imagecorruptions import corrupt
-        img = np.random.randint(0, 255, (224, 224, 3), dtype=np.uint8)
-        out = corrupt(img, corruption_name="defocus_blur", severity=3)
-        print(f"ok    corruption smoke test, output shape {out.shape}")
+        from PIL import Image
+        from src.corruptions import corrupt_image
+        img = Image.fromarray(np.random.randint(0, 255, (224, 224, 3), dtype=np.uint8))
+        out = corrupt_image(img, "blur_gray", 50, key="check")
+        print(f"ok    corruption smoke test, output size {out.size}")
     except Exception as e:  # noqa: BLE001
         ok = False
         print(f"FAIL  corruption smoke test: {e}")

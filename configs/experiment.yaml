@@ -18,12 +18,27 @@ conformal:
   alpha: 0.10                # 90% coverage target
   score: lac                 # least ambiguous classifier: 1 - p(true option)
 
-corruptions:                 # Tier 1, chosen on the pilot (clean 96%: noise 5 -> 87%, blur 5 -> 92%)
-  - name: gaussian_noise     # primary: strongest stressor on the pilot
-    severities: [3, 5]
-  - name: defocus_blur       # gentle comparison
-    severities: [2, 5]
-# Dropped after the pilot: contrast (barely moves GPT-4o), fog (imagecorruptions breaks on NumPy 2).
+corruptions:                 # FROZEN list: 12 conditions. Severity = % of the family's maximum usable strength
+  - name: gaussian_noise     # (standard scale, see src/corruptions.py): sigma 0.40 / 0.60 / 0.80
+    severities: [50, 75, 100]
+  - name: pixelate           # resolution kept 12.5% / 6.25%
+    severities: [75, 100]
+  - name: defocus_blur       # disk radius 10.5 / 14 px
+    severities: [75, 100]
+  - name: grayscale          # control: color loss alone
+    severities: [100]
+  - name: blur_gray          # defocus blur (radius 14) then grayscale
+    severities: [100]
+  - name: cutmix             # 30% of the frame from a different room; label stays the base room
+    severities: [100]
+  - name: mixup              # 40% blend with a different room; label stays the base room
+    severities: [100]
+  - name: fisheye            # barrel distortion, k = 4
+    severities: [100]
+# Mild levels (25, 50) exist for every family but are inert for GPT-4o; run them for weaker models in Week 2.
+# Screened and dropped, no longer in the code: patch, hfgrid, vignette, shuffle, contrast, fog. See
+# results/pilot_screening.md and docs/dropped_corruptions.py. Do not add or remove conditions after
+# looking at test-split results.
 
 models:                      # Tier 1: one model. Tier 2 adds the open model.
   - name: gpt-4o

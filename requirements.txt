@@ -8,8 +8,8 @@ tqdm>=4.66
 pyyaml>=6.0
 python-dotenv>=1.0
 
-# Image corruptions (ImageNet-C functions that work on arbitrary images)
-imagecorruptions>=1.1.2
+# Corruptions are implemented in src/corruptions.py (blur needs OpenCV, fisheye needs SciPy)
+opencv-python>=4.8
 
 # API models (GPT-4o exposes token logprobs, which conformal scoring needs)
 openai>=1.40
