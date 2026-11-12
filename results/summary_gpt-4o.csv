@@ -1,0 +1,2 @@
+model,condition,n,coverage,cov_lo,cov_hi,mean_size,singleton_rate,empty_rate,multi_rate,flag_rate,silent_failure,accuracy,singleton_wrong
+gpt-4o,clean,500,0.928,0.9019310525910869,0.9475422739464601,0.946,0.946,0.054,0.0,0.054,0.018,0.96,0.019027484143763214

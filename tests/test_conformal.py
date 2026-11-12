@@ -47,6 +47,8 @@ def test_sets_and_metrics_on_a_known_example():
     assert abs(m["coverage"] - 2 / 3) < 1e-12 and abs(m["mean_size"] - 4 / 3) < 1e-12
     assert abs(m["singleton_rate"] - 2 / 3) < 1e-12 and abs(m["singleton_wrong"] - 0.5) < 1e-12
     assert m["empty_rate"] == 0.0
+    assert abs(m["silent_failure"] - 1 / 3) < 1e-12 and abs(m["flag_rate"] - 1 / 3) < 1e-12
+    assert abs(m["multi_rate"] - 1 / 3) < 1e-12
 
 
 def test_empty_sets_are_counted():
@@ -59,3 +61,13 @@ def test_wilson_interval():
     lo, hi = wilson(450, 500)
     assert 0.87 < lo < 0.90 < hi < 0.93
     assert all_scores(np.eye(5)).shape == (5, 5)
+
+
+def test_coverage_decomposes_into_empty_multi_miss_and_silent_failures():
+    rng = np.random.default_rng(1)
+    P, g = synth(rng, 2000)
+    for q in (0.05, 0.3, 0.7):
+        m = evaluate(P, g, q)
+        sets = prediction_sets(P, q)
+        multi_miss = float(((sets.sum(1) >= 2) & ~sets[np.arange(len(g)), g]).mean())
+        assert abs((1 - m["coverage"]) - (m["empty_rate"] + multi_miss + m["silent_failure"])) < 1e-12

@@ -40,7 +40,8 @@ def main() -> int:
     print(f"model {model} | alpha {alpha} (target {1 - alpha:.0%}) | calibration n={len(gc)} "
           f"acc={float((Pc.argmax(1) == gc).mean()):.1%} | qhat={qhat:.3e}\n")
 
-    hdr = f"{'condition':<18}{'n':>5}{'coverage':>10}{'95% CI':>16}{'size':>7}{'single':>8}{'empty':>7}{'acc':>7}{'1-set wrong':>13}"
+    hdr = (f"{'condition':<18}{'n':>5}{'coverage':>10}{'95% CI':>16}{'acc':>7}{'flagged':>9}"
+           f"{'empty':>7}{'multi':>7}{'silent fail':>12}")
     print(hdr); print("-" * len(hdr))
     rows_out = []
     for cond in conditions_from_config(cfg):
@@ -51,9 +52,11 @@ def main() -> int:
         m = evaluate(P, g, qhat)
         rows_out.append({"model": model, "condition": cond, **m})
         ci = "[%.1f%%, %.1f%%]" % (100 * m["cov_lo"], 100 * m["cov_hi"])
-        print(f"{cond:<18}{m['n']:>5}{m['coverage']:>10.1%}{ci:>16}"
-              f"{m['mean_size']:>7.2f}{m['singleton_rate']:>8.1%}{m['empty_rate']:>7.1%}"
-              f"{m['accuracy']:>7.1%}{m['singleton_wrong']:>13.1%}")
+        print(f"{cond:<18}{m['n']:>5}{m['coverage']:>10.1%}{ci:>16}{m['accuracy']:>7.1%}"
+              f"{m['flag_rate']:>9.1%}{m['empty_rate']:>7.1%}{m['multi_rate']:>7.1%}{m['silent_failure']:>12.1%}")
+    print("\nflagged = empty or multi-option set (the model does not commit). "
+          "silent fail = committed to ONE answer that was wrong.")
+    print("coverage = 1 - empty - multi misses - silent fail.")
 
     clean = next((r for r in rows_out if r["condition"] == "clean"), None)
     if clean:

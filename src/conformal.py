@@ -47,6 +47,8 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
 
 
 def evaluate(probs, gold, qhat: float) -> dict:
+    """Coverage splits into three parts: 1 - coverage = empty + multi-option misses + silent failures.
+    Only silent failures (a single wrong answer) are unflagged errors; empty sets are abstentions."""
     P, g = np.asarray(probs, dtype=float), np.asarray(gold)
     n = len(g)
     sets = prediction_sets(P, qhat)
@@ -58,5 +60,7 @@ def evaluate(probs, gold, qhat: float) -> dict:
     sw = float((sets[single].argmax(axis=1) != g[single]).mean()) if single.any() else math.nan
     return {"n": n, "coverage": float(covered.mean()), "cov_lo": lo, "cov_hi": hi,
             "mean_size": float(size.mean()), "singleton_rate": float(single.mean()),
-            "empty_rate": float((size == 0).mean()), "accuracy": float((pred == g).mean()),
-            "singleton_wrong": sw}
+            "empty_rate": float((size == 0).mean()), "multi_rate": float((size >= 2).mean()),
+            "flag_rate": float((size != 1).mean()),  # empty or multi-option: the model does not commit
+            "silent_failure": float((single & ~covered).mean()),  # committed to ONE answer and was wrong
+            "accuracy": float((pred == g).mean()), "singleton_wrong": sw}
