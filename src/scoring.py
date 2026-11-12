@@ -62,6 +62,15 @@ def letter_probs(top_logprobs: list[tuple[str, float]], n_options: int) -> tuple
     return [r / mass for r in raw], mass
 
 
+class OutOfCredits(RuntimeError):
+    """The API account has no balance left. Retrying is pointless; add credits and rerun (cached calls are free)."""
+
+
+def _is_out_of_credits(exc: Exception) -> bool:
+    text = str(exc).lower()
+    return "insufficient_quota" in text or "no credits remaining" in text or "exceeded your current quota" in text
+
+
 class GPTScorer:
     def __init__(self, model: str = "gpt-4o", cache_dir: str | Path = "results/raw/cache",
                  detail: str = "high", jpeg_quality: int = 95, client=None, max_retries: int = 6):
@@ -102,6 +111,10 @@ class GPTScorer:
                     model=self.model, messages=messages, max_tokens=1, temperature=0,
                     logprobs=True, top_logprobs=20)
             except Exception as e:  # noqa: BLE001
+                if _is_out_of_credits(e):
+                    raise OutOfCredits("OpenAI account is out of credits. Add credits at "
+                                       "https://platform.openai.com/settings/organization/billing/ "
+                                       "and rerun; calls already made are cached and cost nothing.") from e
                 name = type(e).__name__
                 fatal = name in {"AuthenticationError", "PermissionDeniedError", "BadRequestError",
                                  "NotFoundError"}

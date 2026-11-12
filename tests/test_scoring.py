@@ -3,7 +3,9 @@ from types import SimpleNamespace as NS
 
 from PIL import Image
 
-from src.scoring import GPTScorer, build_prompt, letter_probs
+import pytest
+
+from src.scoring import GPTScorer, OutOfCredits, build_prompt, letter_probs
 
 
 def test_prompt_lists_letters_and_cleans_names():
@@ -48,3 +50,42 @@ def test_scorer_caches_to_disk(tmp_path):
     assert r1["probs"][2] > 0.69 and abs(sum(r1["probs"]) - 1) < 1e-9
     s.score(img, opts[::-1])  # different option order must not reuse the cache
     assert client.calls == 2
+
+
+def test_out_of_credits_stops_immediately_without_retrying(tmp_path):
+    class RateLimitError(Exception):
+        pass
+
+    calls = {"n": 0}
+
+    class C:
+        def create(self, **kw):
+            calls["n"] += 1
+            raise RateLimitError("Error code: 429 - You have no credits remaining. Add credits to continue.")
+
+    s = GPTScorer(cache_dir=tmp_path, client=NS(chat=NS(completions=C())))
+    with pytest.raises(OutOfCredits):
+        s.score(Image.new("RGB", (32, 32)), list("abcde"))
+    assert calls["n"] == 1  # no retries
+
+
+def test_ordinary_rate_limit_is_still_retried(tmp_path, monkeypatch):
+    import src.scoring as sc
+    monkeypatch.setattr(sc.time, "sleep", lambda *_: None)
+
+    class RateLimitError(Exception):
+        pass
+
+    state = {"n": 0}
+    good = FakeClient().chat.completions
+
+    class C:
+        def create(self, **kw):
+            state["n"] += 1
+            if state["n"] < 3:
+                raise RateLimitError("Error code: 429 - Rate limit reached for requests, retry later")
+            return good.create(**kw)
+
+    s = GPTScorer(cache_dir=tmp_path, client=NS(chat=NS(completions=C())))
+    assert abs(sum(s.score(Image.new("RGB", (32, 32)), list("abcde"))["probs"]) - 1) < 1e-9
+    assert state["n"] == 3

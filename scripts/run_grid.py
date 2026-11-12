@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.dataset import find_images_root, load_manifest, verify_manifest  # noqa: E402
 from src.grid import conditions_from_config, run_condition, save_probs  # noqa: E402
 from src.partners import PartnerPool  # noqa: E402
-from src.scoring import GPTScorer  # noqa: E402
+from src.scoring import GPTScorer, OutOfCredits  # noqa: E402
 
 
 def main() -> int:
@@ -43,8 +43,12 @@ def main() -> int:
     if args.all:
         jobs += [("test", c) for c in conditions_from_config(cfg) if c != "clean"]
     for split, cond in jobs:
-        rows = run_condition(man["splits"][split], root, scorer, cond, seed=cfg["seed"],
-                             workers=args.workers, desc=f"{split} {cond}", partners=partners)
+        try:
+            rows = run_condition(man["splits"][split], root, scorer, cond, seed=cfg["seed"],
+                                 workers=args.workers, desc=f"{split} {cond}", partners=partners)
+        except OutOfCredits as e:
+            print(f"\nSTOPPED at {split} {cond}: {e}")
+            return 2
         low = sum(r["letter_mass"] < 0.95 for r in rows)
         path = save_probs(out, mcfg["name"], split, cond, rows)
         print(f"saved {path}  ({len(rows)} rows, {low} with letter mass < 0.95)")
