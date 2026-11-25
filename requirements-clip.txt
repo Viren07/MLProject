@@ -1,0 +1,5 @@
+# CLIP baseline (scripts/run_grid.py --model clip-vit-base-patch32).
+# Runs on a laptop CPU in a few minutes per condition. No GPU and no API key needed.
+-r requirements.txt
+torch>=2.2
+transformers>=4.45
