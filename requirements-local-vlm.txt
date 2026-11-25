@@ -1,0 +1,13 @@
+# Local vision-language models (Ministral 3, Qwen VL, Gemma) scored through transformers.
+# Install a CUDA build of torch FIRST, not the PyPI default, which is CPU-only on Windows:
+#   pip uninstall -y torch
+#   pip install torch==2.14.1 torchvision==0.29.1 --index-url https://download.pytorch.org/whl/cu130
+#
+# torchvision is required, not optional: Ministral 3 uses Pixtral's vision stack and
+# PixtralProcessor refuses to load without it. Install it from the same CUDA index as torch,
+# or pip will pull a CPU build and quietly mismatch the two.
+-r requirements.txt
+transformers>=4.45
+accelerate>=0.34
+bitsandbytes>=0.43      # 4-bit loading; needed to fit 8B on an 8 GB card
+mistral-common>=1.5     # Ministral 3 tokenizer
