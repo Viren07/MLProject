@@ -1,0 +1,14 @@
+model,condition,coverage,cov_p05,cov_p95,cov_median,spread_points
+ministral-3-3b,clean,0.93,0.91,0.944,0.93,3.399999999999992
+ministral-3-3b,gaussian_noise:50,0.618,0.492,0.746,0.618,25.4
+ministral-3-3b,gaussian_noise:75,0.484,0.334,0.662,0.484,32.800000000000004
+ministral-3-3b,gaussian_noise:100,0.482,0.304,0.654,0.482,35.0
+ministral-3-3b,pixelate:75,0.642,0.518,0.728,0.642,20.999999999999996
+ministral-3-3b,pixelate:100,0.474,0.33,0.656,0.474,32.6
+ministral-3-3b,defocus_blur:75,0.734,0.662,0.798,0.734,13.600000000000001
+ministral-3-3b,defocus_blur:100,0.65,0.518,0.756,0.65,23.799999999999997
+ministral-3-3b,grayscale:100,0.91,0.886,0.932,0.91,4.600000000000004
+ministral-3-3b,blur_gray:100,0.518,0.368,0.64,0.518,27.200000000000003
+ministral-3-3b,cutmix:100,0.782,0.74,0.84,0.782,9.999999999999998
+ministral-3-3b,mixup:100,0.77,0.71,0.806,0.77,9.600000000000009
+ministral-3-3b,fisheye:100,0.656,0.544,0.754,0.656,20.999999999999996
