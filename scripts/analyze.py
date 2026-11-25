@@ -14,21 +14,18 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.conformal import calibrate, evaluate, true_scores  # noqa: E402
-from src.dataset import LETTERS, load_manifest  # noqa: E402
+from src.dataset import load_manifest  # noqa: E402
 from src.grid import conditions_from_config, load_probs  # noqa: E402
-
-
-def arrays(rows, items):
-    gold = {it["id"]: LETTERS.index(it["answer"]) for it in items}
-    return np.array([r["probs"] for r in rows]), np.array([gold[r["id"]] for r in rows])
+from src.report import arrays, resolve_model  # noqa: E402
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", default="configs/experiment.yaml")
+    ap.add_argument("--model", default=None, help="model name from the config; default is the first")
     args = ap.parse_args()
     cfg = yaml.safe_load(open(args.config, encoding="utf-8"))
-    model = next(m for m in cfg["models"] if m["provider"] == "openai")["name"]
+    model = resolve_model(cfg, args.model)["name"]
     out, alpha = cfg.get("probs_dir", "results/probs"), cfg["conformal"]["alpha"]
     man = load_manifest(cfg["task"]["manifest"])
 
