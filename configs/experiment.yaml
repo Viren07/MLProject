@@ -35,13 +35,61 @@ corruptions:                 # FROZEN list: 12 conditions. Severity = % of the f
     severities: [100]
   - name: fisheye            # barrel distortion, k = 4
     severities: [100]
-# Mild levels (25, 50) exist for every family but are inert for GPT-4o; run them for weaker models in Week 2.
+# Mild levels (25, 50) exist in src/corruptions.py but are deliberately NOT run: the 12 conditions
+# above are frozen and identical for every model, so models stay directly comparable.
 # Screened and dropped, no longer in the code: patch, hfgrid, vignette, shuffle, contrast, fog. See
 # results/pilot_screening.md and docs/dropped_corruptions.py. Do not add or remove conditions after
 # looking at test-split results.
 
-models:                      # Tier 1: one model. Tier 2 adds the open model.
+models:                      # Every model runs the same frozen 12 conditions above.
   - name: gpt-4o
     provider: openai
     image_detail: high       # fixed; blur effects would be hidden by 'low' downsampling
     jpeg_quality: 95         # same encoder for clean and corrupted images
+
+  # Classical baseline. No API key and no letters to read: CLIP scores image-text similarity
+  # and a softmax over the five offered rooms gives probabilities directly. Expected to be
+  # far less confident than the VLMs, which should loosen the cut-off and finally produce
+  # shortlists holding more than one option.
+  - name: clip-vit-base-patch32
+    provider: clip
+    hf_id: openai/clip-vit-base-patch32
+    prompt_template: "a photo of a {}"
+    jpeg_quality: 95         # same encoder as the API models, so the codec is never a confound
+
+  # Larger CLIP. Same architecture family, same scoring and same prompts as ViT-B/32, so accuracy is
+  # close to the only thing that differs. If its clean accuracy lands above the 90% target, the
+  # crossover rule predicts it abstains where ViT-B/32 widens.
+  - name: clip-vit-large-patch14
+    provider: clip
+    hf_id: openai/clip-vit-large-patch14
+    prompt_template: "a photo of a {}"
+    jpeg_quality: 95
+
+  # Gemini. Only the 2.x line returns logprobs; 3.x and later refuse the parameter outright and
+  # therefore cannot be scored by first-token letter probability at all.
+  - name: gemini-2.5-flash
+    provider: gemini
+    top_logprobs: 20
+    jpeg_quality: 95
+
+  # Ministral 3. Every size shares one frozen 410M vision encoder, so the sizes differ mainly in
+  # language-model capacity: an accuracy ladder with the image pathway held constant. Run every
+  # size at the SAME precision, or the ladder is confounded by quantisation.
+  #
+  # Use the -BF16 repos, not the plain Instruct ones. The plain ones ship FP8 weights, which
+  # bitsandbytes cannot re-quantise, and which transformers dequantises to BF16 on load anyway,
+  # so they cost the same memory with none of the 4-bit saving.
+  - name: ministral-3-3b
+    provider: local
+    hf_id: mistralai/Ministral-3-3B-Instruct-2512-BF16
+    load_in_4bit: true
+    dtype: bfloat16
+    jpeg_quality: 95
+
+  - name: ministral-3-8b
+    provider: local
+    hf_id: mistralai/Ministral-3-8B-Instruct-2512-BF16
+    load_in_4bit: true
+    dtype: bfloat16
+    jpeg_quality: 95
